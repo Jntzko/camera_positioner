@@ -12,7 +12,6 @@ private:
    tf::TransformBroadcaster br;
 
    // constant transforms
-   tf::StampedTransform optical_transform;
    tf::StampedTransform world_tag_transform;
 
    // latest measured position of the camera
@@ -33,22 +32,12 @@ public:
    void getConstantTransforms(){
       while(true){
          try {
-            listener.waitForTransform("/world", "/april_tag_ur5", ros::Time(0), ros::Duration(5.0) );
-            listener.lookupTransform("/world", "/april_tag_ur5", ros::Time(0), world_tag_transform);
+            listener.waitForTransform("/world", "/tag_0", ros::Time(0), ros::Duration(5.0) );
+            listener.lookupTransform("/world", "/tag_0", ros::Time(0), world_tag_transform);
             break;
          }
          catch(...){}
          ROS_WARN_THROTTLE(10, "Waiting for world->april_tag_ur5 transform");
-      }
-
-      while(true){
-         try {
-            listener.waitForTransform("/camera_rgb_optical_frame", "/camera_link", ros::Time(0), ros::Duration(5.0) );
-            listener.lookupTransform("/camera_rgb_optical_frame", "/camera_link",  ros::Time(0), optical_transform);
-            break;
-         }
-         catch(...){}
-         ROS_WARN_THROTTLE(10, "Waiting for camera_rgb_optical_frame->camera_link transform");
       }
    }
 
@@ -57,7 +46,7 @@ public:
       if(msg.detections.size() == 1 && msg.detections[0].id == 0){
          tf::Transform tag_transform;
          tf::poseMsgToTF(msg.detections[0].pose.pose, tag_transform);
-         world_camera_transform= world_tag_transform * tag_transform.inverse() * optical_transform;
+         world_camera_transform= world_tag_transform * tag_transform.inverse();
          if(!initialized){
             ROS_INFO("camera positioner is running");
             initialized = true;
@@ -71,7 +60,7 @@ public:
 
       // if we measured the camera's position successfully, publish it
       if(initialized){
-         br.sendTransform(tf::StampedTransform(world_camera_transform, ros::Time::now(), "/world", "/camera_link"));
+         br.sendTransform(tf::StampedTransform(world_camera_transform, ros::Time::now(), "/world", "/usb_cam"));
       }
    }
 };
