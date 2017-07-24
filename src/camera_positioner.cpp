@@ -32,8 +32,8 @@ public:
    void getConstantTransforms(){
       while(true){
          try {
-            listener.waitForTransform("/world", "/tag_0", ros::Time(0), ros::Duration(5.0) );
-            listener.lookupTransform("/world", "/tag_0", ros::Time(0), world_tag_transform);
+            listener.waitForTransform("/world", "/tag_1", ros::Time(0), ros::Duration(5.0) );
+            listener.lookupTransform("/world", "/tag_1", ros::Time(0), world_tag_transform);
             break;
          }
          catch(...){}
@@ -44,7 +44,7 @@ public:
    void callback(const apriltags_ros::AprilTagDetectionArray& msg){
       // if we got a valid tag detection, update world_camera_transform
       for (int i=0; i < msg.detections.size(); i++){
-        if( msg.detections[i].id == 0){
+        if( msg.detections[i].id == 1){
            tf::Transform tag_transform;
            tf::poseMsgToTF(msg.detections[i].pose.pose, tag_transform);
            world_camera_transform= world_tag_transform * tag_transform.inverse();
