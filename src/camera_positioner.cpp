@@ -32,8 +32,8 @@ public:
    void getConstantTransforms(){
       while(true){
          try {
-            listener.waitForTransform("/world", "/tag_1", ros::Time(0), ros::Duration(5.0) );
-            listener.lookupTransform("/world", "/tag_1", ros::Time(0), world_tag_transform);
+            listener.waitForTransform("/poc_world", "/tag_1", ros::Time(0), ros::Duration(5.0) );
+            listener.lookupTransform("/poc_world", "/tag_1", ros::Time(0), world_tag_transform);
             break;
          }
          catch(...){}
@@ -62,7 +62,7 @@ public:
 
       // if we measured the camera's position successfully, publish it
       if(initialized){
-         br.sendTransform(tf::StampedTransform(world_camera_transform, ros::Time::now(), "/world", "/usb_cam"));
+         br.sendTransform(tf::StampedTransform(world_camera_transform, ros::Time::now(), "/poc_world", "/usb_cam"));
       }
    }
 };
