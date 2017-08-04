@@ -12,10 +12,13 @@ private:
    tf::TransformBroadcaster br;
 
    // constant transforms
-   tf::StampedTransform world_tag_transform;
+   tf::StampedTransform world_biotac_transform;
+   tf::StampedTransform poc_world_tag_transform;
+   tf::StampedTransform biotac_tag_transform;
 
    // latest measured position of the camera
    tf::Transform world_camera_transform;
+   tf::Transform poc_world_camera_transform;
    ros::Time latest_detection_time;
 
    // for successful initialization the apriltag has to be detected _once_
@@ -33,11 +36,29 @@ public:
       while(true){
          try {
             listener.waitForTransform("/poc_world", "/tag_1", ros::Time(0), ros::Duration(5.0) );
-            listener.lookupTransform("/poc_world", "/tag_1", ros::Time(0), world_tag_transform);
+            listener.lookupTransform("/poc_world", "/tag_1", ros::Time(0), poc_world_tag_transform);
             break;
          }
          catch(...){}
-         ROS_WARN_THROTTLE(10, "Waiting for world->april_tag_ur5 transform");
+         ROS_WARN_THROTTLE(10, "Waiting for poc_world->tag_1 transform");
+      }
+      while(true){
+         try {
+            listener.waitForTransform("/world", "/rh_ff_biotac_link", ros::Time(0), ros::Duration(5.0) );
+            listener.lookupTransform("/world", "/rh_ff_biotac_link", ros::Time(0), world_biotac_transform);
+            break;
+         }
+         catch(...){}
+         ROS_WARN_THROTTLE(10, "Waiting for world->rh_ff_biotac_link transform");
+      }
+      while(true){
+         try {
+            listener.waitForTransform("/poc_ff_biotac_link", "/tag_1", ros::Time(0), ros::Duration(5.0) );
+            listener.lookupTransform("/poc_ff_biotac_link", "/tag_1", ros::Time(0), biotac_tag_transform);
+            break;
+         }
+         catch(...){}
+         ROS_WARN_THROTTLE(10, "Waiting for poc_ff_biotac_link->tag_1 transform");
       }
    }
 
@@ -47,22 +68,20 @@ public:
         if( msg.detections[i].id == 1){
            tf::Transform tag_transform;
            tf::poseMsgToTF(msg.detections[i].pose.pose, tag_transform);
-           world_camera_transform= world_tag_transform * tag_transform.inverse();
+           world_camera_transform= world_biotac_transform * biotac_tag_transform * tag_transform.inverse();
+           poc_world_camera_transform= poc_world_tag_transform * tag_transform.inverse();
            if(!initialized){
               ROS_INFO("camera positioner is running");
               initialized = true;
            }
-           latest_detection_time = msg.detections[0].pose.header.stamp;
+           latest_detection_time = msg.detections[i].pose.header.stamp;
         }
-      }
-
-      if(ros::Time::now() - latest_detection_time > ros::Duration(20.0)){
-         ROS_WARN_THROTTLE(5, "Didn't detect apriltag for camera position update in 20 seconds. The camera might have moved in the meanwhile.");
       }
 
       // if we measured the camera's position successfully, publish it
       if(initialized){
-         br.sendTransform(tf::StampedTransform(world_camera_transform, ros::Time::now(), "/poc_world", "/usb_cam"));
+         br.sendTransform(tf::StampedTransform(world_camera_transform.inverse(), ros::Time::now(), "/usb_cam", "/world"));
+         br.sendTransform(tf::StampedTransform(poc_world_camera_transform.inverse(), ros::Time::now(), "/usb_cam", "/poc_world"));
       }
    }
 };

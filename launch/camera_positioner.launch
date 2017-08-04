@@ -1,4 +1,4 @@
 <?xml version="1.0"?>
 <launch>
-  <node pkg="camera_positioner" type="camera_positioner" name="camera_positioner"/>
+  <node pkg="camera_positioner" type="camera_positioner" name="camera_positioner" output="screen"/>
 </launch>
