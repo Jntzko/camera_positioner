@@ -1,4 +1,8 @@
 <?xml version="1.0"?>
 <launch>
-  <node pkg="camera_positioner" type="camera_positioner" name="camera_positioner" output="screen"/>
+  <arg name="finger" default="ff" />
+
+  <node pkg="camera_positioner" type="camera_positioner" name="camera_positioner" output="screen">
+    <param name="finger" type="string" value="$(arg finger)" />
+  </node>
 </launch>
